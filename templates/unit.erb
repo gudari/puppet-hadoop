@@ -1,0 +1,18 @@
+[Unit]
+Description=Apache Hue server
+Documentation=https://github.com/cloudera/hue
+
+[Service]
+Type=simple
+User=root
+Group=root
+SyslogIdentifier=<%= @service_name %>
+ExecStart=<%= @install_directory %>/start-dfs.sh
+ExecStop=<%= @install_directory %>/stop-dfs.sh
+RemainAfterExit=yes
+
+LimitNOFILE=65536
+LimitCORE=infinity
+
+[Install]
+WantedBy=multi-user.target
