@@ -1,19 +1,19 @@
-class hadoop::service (
+define hadoop::service (
+  $service_name      = $title,
   $service_install   = $hadoop::service_install,
   $service_ensure    = $hadoop::service_ensure,
+  $service_user      = 'root',
+  $service_group     = 'root',
   $log4j_opts        = $hadoop::log4j_opts,
   $opts              = $hadoop::opts,
   $config_dir        = $hadoop::config_dir,
   $pid_location      = $hadoop::pid_location,
   $log_dir           = $hadoop::log_dir,
-  $service_name      = $hadoop::params::service_name,
   $install_directory = $hadoop::install_directory,
+  $hadoop_etc_dir    = $hadoop::hadoop_etc_dir,
+  $java_home_dir     = '/usr',
 )
 {
-  if $caller_module_name != $module_name {
-    fail("Use of private class ${name} by ${caller_module_name}")
-  }
-
   if $service_install {
     if $::service_provider == 'systemd' {
       include ::systemd

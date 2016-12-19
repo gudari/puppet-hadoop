@@ -1,0 +1,19 @@
+[Unit]
+Description=Apache Hue server
+Documentation=https://github.com/cloudera/hue
+
+[Service]
+Type=simple
+User=<%= @service_user %>
+Group=<%= @service_group %>
+SyslogIdentifier=<%= @service_name %>
+Environment='HADOOP_CONF_DIR=<%= @config_dir %>'
+Environment='JAVA_HOME=<%= @java_home_dir %>'
+ExecStart=<%= @install_directory %>/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR --script hdfs start namenode
+ExecStop=<%= @install_directory %>/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR --script hdfs start namenode
+
+LimitNOFILE=65536
+LimitCORE=infinity
+
+[Install]
+WantedBy=multi-user.target

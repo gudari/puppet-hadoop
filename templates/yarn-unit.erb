@@ -7,8 +7,8 @@ Type=simple
 User=root
 Group=root
 SyslogIdentifier=<%= @service_name %>
-ExecStart=<%= @install_directory %>/sbin/start-dfs.sh
-ExecStop=<%= @install_directory %>/sbin/stop-dfs.sh
+ExecStart=<%= @install_directory %>/sbin/start-yarn.sh
+ExecStop=<%= @install_directory %>/sbin/stop-yarn.sh
 RemainAfterExit=yes
 
 LimitNOFILE=65536

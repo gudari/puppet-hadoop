@@ -17,13 +17,13 @@ class hadoop::install (
       source          => $package_url,
       creates         => "${install_directory}/config",
       cleanup         => true,
-      user            => 'hadoop',
-      group           => 'hadoop',
+      user            => $hadoop::hdfs_user,
+      group           => $hadoop::hadoop_group,
       require         => [
         File[$package_dir],
         File[$install_directory],
-        Group['hadoop'],
-        User['hadoop'],
+        Group[$hadoop::hadoop_group],
+        User[$hadoop::hdfs_user],
       ],
       before          => File['/opt/hadoop/config'],
     }
