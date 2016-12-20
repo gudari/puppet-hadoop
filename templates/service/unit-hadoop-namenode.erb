@@ -7,7 +7,7 @@ Type=simple
 User=<%= @service_user %>
 Group=<%= @service_group %>
 SyslogIdentifier=<%= @service_name %>
-Environment='HADOOP_CONF_DIR=<%= @config_dir %>'
+Environment='HADOOP_CONF_DIR=<%= @install_directory %>/<%= @hadoop_etc_dir %>'
 Environment='JAVA_HOME=<%= @java_home_dir %>'
 ExecStart=<%= @install_directory %>/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR --script hdfs start namenode
 ExecStop=<%= @install_directory %>/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR --script hdfs start namenode

@@ -1,5 +1,5 @@
-class hadoop::namenode (
-  $service_namenode = $hadoop::service_namenode,
+class hadoop::datanode (
+  $service_datanode = $hadoop::service_datanode,
   $hdfs_user        = $hadoop::hdfs_user,
   $hdfs_id          = $hadoop::hdfs_id,
   $hadoop_group     = $hadoop::hadoop_group,
@@ -14,17 +14,16 @@ class hadoop::namenode (
     uid        => $hdfs_id,
   }
 
-  class { '::hadoop::namenode::install': } ->
-
   class { '::hadoop::namenode::config':
     service_user => $hdfs_user,
   } ->
   class { '::hadoop::namenode::format':
     service_user => $hdfs_user,
   } ->
-  ::hadoop::common::service { $service_namenode:
-    service_user  => $hdfs_user,
-    service_group => $hadoop_group,
-    require       => User[ $hdfs_user ],
+  hadoop::service { $service_namenode:
+    service_user  => $hdfs_user
+    service_group => $hadoop_group
+    require       => User[ $hdfs_user ]
   }
+
 }

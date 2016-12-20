@@ -66,14 +66,14 @@ class hadoop (
     gid    => $group_id,
   }
 
-  user { $hdfs_user:
-    ensure  => present,
-    home       => "/home/${hdfs_user}",
-    managehome => true,
-    shell   => '/bin/bash',
-    require => Group[ $hadoop_group],
-    uid     => $hdfs_id,
-  }
+#  user { $hdfs_user:
+#    ensure  => present,
+#    home       => "/home/${hdfs_user}",
+#    managehome => true,
+#    shell   => '/bin/bash',
+#    require => Group[ $hadoop_group],
+#    uid     => $hdfs_id,
+#  }
 
   user { $mapred_user:
     ensure  => present,
@@ -93,62 +93,9 @@ class hadoop (
     uid     => $hdfs_id,
   }
 
-  file { $package_dir:
-    ensure  => directory,
-    owner   => $hdfs_user,
-    group   => $hadoop_group,
-    require => [
-      Group[$hadoop_group],
-      User[$hdfs_user],
-      User[$mapred_user],
-      User[$yarn_user],
-    ],
-  }
-
-  file { $install_directory:
-    ensure  => directory,
-    owner   => $hdfs_user,
-    group   => $hadoop_group,
-    require => [
-      Group[$hadoop_group],
-      User[$hdfs_user],
-      User[$mapred_user],
-      User[$yarn_user],
-    ],
-  }
-  file { '/opt/hadoop':
-    ensure  => link,
-    target  => $install_directory,
-    require => File[ $install_directory ],
-  }
-
-  file { '/opt/hadoop/config':
-    ensure  => directory,
-    owner   => $hdfs_user,
-    group   => $hadoop_group,
-    require => [
-      Group[$hadoop_group],
-      User[$hdfs_user],
-      User[$mapred_user],
-      User[$yarn_user],
-    ],
-  }
-
-  file { '/var/log/hadoop':
-    ensure  => directory,
-    owner   => $hdfs_user,
-    group   => $hadoop_group,
-    require => [
-      Group[$hadoop_group],
-      User[$hdfs_user],
-      User[$mapred_user],
-      User[$yarn_user],
-    ],
-  }
 
 
-
-  class { 'hadoop::install': }
+  class { '::hadoop::namenode': }
   #class { 'hadoop::config': }
   #class { 'hadoop::service': }
 

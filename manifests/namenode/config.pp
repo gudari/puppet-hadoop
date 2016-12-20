@@ -2,9 +2,9 @@ class hadoop::namenode::config (
   $install_directory = $hadoop::install_directory,
   $package_dir       = $hadoop::package_dir,
   $basefilename      = $hadoop::basefilename,
-  $service_name      = $hadoop::service_name,
-  $service_user      = $hadoop::service_user,
-  $service_group     = $hadoop::service_group,
+  $service_name      = $hadoop::service_namenode,
+  $service_user      = $hadoop::hdfs_user,
+  $service_group     = $hadoop::hadoop_group,
 )
 {
 
