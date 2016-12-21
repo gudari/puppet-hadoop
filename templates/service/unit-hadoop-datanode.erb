@@ -1,5 +1,5 @@
 [Unit]
-Description=Apache Hadoop NameNode
+Description=Apache Hadoop Datanode
 Documentation=http://hadoop.apache.org/
 
 [Service]
@@ -10,8 +10,8 @@ SyslogIdentifier=<%= @service_name %>
 Environment='HADOOP_LOG_DIR=/var/log/hadoop'
 Environment='HADOOP_CONF_DIR=<%= @install_directory %>/<%= @hadoop_etc_dir %>'
 Environment='JAVA_HOME=<%= @java_home_dir %>'
-ExecStart=<%= @install_directory %>/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR --script hdfs start namenode
-ExecStop=<%= @install_directory %>/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR --script hdfs start namenode
+ExecStart=<%= @install_directory %>/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR --script hdfs start datanode
+ExecStop=<%= @install_directory %>/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR --script hdfs start datanode
 
 LimitNOFILE=65536
 LimitCORE=infinity
