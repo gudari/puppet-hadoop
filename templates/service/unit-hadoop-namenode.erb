@@ -7,11 +7,13 @@ Type=simple
 User=<%= @service_user %>
 Group=<%= @service_group %>
 SyslogIdentifier=<%= @service_name %>
+Environment='HADOOP_PID_DIR=/tmp'
 Environment='HADOOP_LOG_DIR=/var/log/hadoop'
 Environment='HADOOP_CONF_DIR=<%= @install_directory %>/<%= @hadoop_etc_dir %>'
 Environment='JAVA_HOME=<%= @java_home_dir %>'
 ExecStart=<%= @install_directory %>/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR --script hdfs start namenode
 ExecStop=<%= @install_directory %>/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR --script hdfs start namenode
+PIDFile=/tmp/hadoop-hdfs-namenode.pid
 
 LimitNOFILE=65536
 LimitCORE=infinity
