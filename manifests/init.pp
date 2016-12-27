@@ -1,63 +1,74 @@
 class hadoop (
-  $version               = $hadoop::params::version,
-  $install_dir           = $hadoop::params::install_dir,
-  $mirror_url            = $hadoop::params::mirror_url,
-  $install_java          = $hadoop::params::install_java,
-  $java_home_dir         = '',
-  $package_dir           = $hadoop::params::package_dir,
-  $package_name          = $hadoop::params::package_name,
-  $package_ensure        = $hadoop::params::package_ensure,
-  $group_id              = $hadoop::params::group_id,
-  $user_id               = $hadoop::params::user_id,
-  $hadoop_etc_dir        = $hadoop::params::hadoop_etc_dir,
-  $install_dependencies  = $hadoop::params::install_dependencies,
-  $packages_dependencies = $hadoop::params::packages_dependencies,
-  $service_name          = $hadoop::params::service_name,
-  $config_dir            = $hadoop::params::config_dir,
+  $version                 = $hadoop::params::version,
+  $install_dir             = $hadoop::params::install_dir,
+  $config_dir              = "${install_dir}/etc/hadoop",
+  $mirror_url              = $hadoop::params::mirror_url,
+  $download_dir            = $hadoop::params::download_dir,
+  $log_dir                 = $hadoop::params::log_dir,
 
-  $hdfs_user    = $hadoop::params::hdfs_user,
-  $hdfs_id      = $hadoop::params::hdfs_id,
-  $mapred_user  = $hadoop::params::mapred_user,
-  $mapred_id    = $hadoop::params::mapred_id,
-  $yarn_user    = $hadoop::params::yarn_user,
-  $yarn_id      = $hadoop::params::yarn_id,
-  $hadoop_group = $hadoop::params::hadoop_group,
-  $hadoop_id    = $hadoop::params::hadoop_id,
+  $package_name            = $hadoop::params::package_name,
+  $package_ensure          = $hadoop::params::package_ensure,
 
-  $service_namenode = $hadoop::params::service_namenode,
-  $service_datanode = $hadoop::params::service_datanode,
+  $install_java            = $hadoop::params::install_java,
+  $java_version            = $hadoop::params::java_version,
+  $install_dependencies    = $hadoop::params::install_dependencies,
+  $packages_dependencies   = $hadoop::params::packages_dependencies,
+
+  $package_dir             = $hadoop::params::package_dir,
+  $group_id                = $hadoop::params::group_id,
+  $user_id                 = $hadoop::params::user_id,
+  $hadoop_etc_dir          = $hadoop::params::hadoop_etc_dir,
+
+  $service_name            = $hadoop::params::service_name,
+
+  $hdfs_user               = $hadoop::params::hdfs_user,
+  $hdfs_id                 = $hadoop::params::hdfs_id,
+  $hadoop_group            = $hadoop::params::hadoop_group,
+  $hadoop_id               = $hadoop::params::hadoop_id,
+
+  $service_namenode        = $hadoop::params::service_namenode,
+  $service_datanode        = $hadoop::params::service_datanode,
   $service_resourcemanager = $hadoop::params::service_resourcemanager,
-  $service_nodemanager = $hadoop::params::service_nodemanager,
-  $service_historyserver = $hadoop::params::service_historyserver,
-  $service_journalnode = $hadoop::params::service_journalnode,
-  $service_hdfs_zkfc = $hadoop::params::service_zkfc,
+  $service_nodemanager     = $hadoop::params::service_nodemanager,
+  $service_historyserver   = $hadoop::params::service_historyserver,
+  $service_journalnode     = $hadoop::params::service_journalnode,
+  $service_zkfc            = $hadoop::params::service_zkfc,
+
+  $primary_namenode = $::fqdn,
+  $secondary_namenode = undef,
+  $slaves = [ $::fqdn ],
+
+  $datanodes = [ $::fqdn ],
+  $journalnode_hostnames = undef,
+
+  $cluster_name = $::hadoop::params::cluster_name,
+
+  $overwrite_core_site_conf = {},
+  $hdfs_namenode_dirs = $::hadoop::params::hdfs_namenode_dirs,
+  $hdfs_datanode_dirs = $::hadoop::params::hdfs_datanode_dirs,
 
 ) inherits hadoop::params {
 
   validate_bool($install_java)
-  validate_absolute_path($package_dir)
+  validate_bool($install_dependencies)
 
   $basefilename = "hadoop-${version}.tar.gz"
-  $package_url = "${mirror_url}/hadoop-${version}/${basefilename}"
-
-  $install_directory = $install_dir ? {
-    $hadoop::params::install_dir => "/opt/hadoop-${version}",
-    default                     => $install_dir,
-  }
+  $package_url  = "${mirror_url}/hadoop-${version}/${basefilename}"
+  $extract_dir  = "/opt/hadoop-${version}"
 
   if $install_java {
     java::oracle { 'jdk8':
       ensure  => 'present',
-      version => '8',
+      version => $java_version,
       java_se => 'jdk',
-      before  => Archive[ "${package_dir}/${basefilename}" ]
+      before  => Archive[ "${download_dir}/${basefilename}" ]
     }
   }
 
   if $install_dependencies {
     package { $packages_dependencies:
       ensure => present,
-      before => Archive[ "${package_dir}/${basefilename}" ],
+      before => Archive[ "${download_dir}/${basefilename}" ],
     }
   }
 
@@ -66,37 +77,74 @@ class hadoop (
     gid    => $group_id,
   }
 
-#  user { $hdfs_user:
-#    ensure  => present,
-#    home       => "/home/${hdfs_user}",
-#    managehome => true,
-#    shell   => '/bin/bash',
-#    require => Group[ $hadoop_group],
-#    uid     => $hdfs_id,
-#  }
-
-  user { $mapred_user:
-    ensure  => present,
-    home       => "/home/${mapred_user}",
+  user { $hdfs_user:
+    ensure     => present,
+    shell      => '/bin/bash',
+    home       => "/home/${hdfs_user}",
     managehome => true,
-    shell   => '/bin/bash',
-    require => Group[ $hadoop_group],
-    uid     => $hdfs_id,
+    require    => Group[ $hadoop_group ],
+    uid        => $hdfs_id,
   }
 
-  user { $yarn_user:
-    ensure  => present,
-    home       => "/home/${yarn_user}",
-    managehome => true,
-    shell   => '/bin/bash',
-    require => Group[ $hadoop_group ],
-    uid     => $hdfs_id,
+  file { "/home/${hdfs_user}/.ssh":
+    ensure => directory,
+    owner  => $hdfs_user,
+    group  => $hadoop_group,
+    mode   => '0700',
+    require => User[ $hdfs_user ],
+  }
+  file { "/home/${hdfs_user}/.ssh/id_dsa":
+    ensure  => file,
+    owner   => $hdfs_user,
+    group   => $hadoop_group,
+    mode    => '0400',
+    source  => 'puppet:///modules/hadoop/sshkey/id_dsa',
+    require => File[ "/home/${hdfs_user}/.ssh" ],
+#    before  => Service[ $hdfs_user ],
+  }
+  file { "/home/${hdfs_user}/.ssh/authorized_keys":
+    ensure => file,
+    owner  => $hdfs_user,
+    group  => $hadoop_group,
+    mode   => '0600',
+    source => 'puppet:///modules/hadoop/sshkey/authorized_keys',
+    require => File[ "/home/${hdfs_user}/.ssh" ],
+#    before  => Service[ $hdfs_user ],
+  }
+  file { "/home/${hdfs_user}/.ssh/known_hosts":
+    ensure => file,
+    owner  => $hdfs_user,
+    group  => $hadoop_group,
+    mode   => '0644',
+    source => 'puppet:///modules/hadoop/sshkey/known_hosts',
+    require => File[ "/home/${hdfs_user}/.ssh" ],
   }
 
+  if $::fqdn == $primary_namenode or $::fqdn == $secondary_namenode {
+    $daemon_namenode = true
+    $mapred_user = true
+  } else {
+    $daemon_namenode = false
+    $mapred_user = false
+  }
+  if member($datanodes, $::fqdn) {
+    $daemon_datanode = true
+  } else {
+    $daemon_datanode = false
+  }
+
+  $default_core_site_conf = {
+    'fs.defaultFS'        => "hdfs://${primary_namenode}:8020",
+    'io.file.buffer.size' => '131072',
+  }
+
+  $core_site_conf = merge( $default_core_site_conf, $overwrite_core_site_conf)
 
 
-  class { '::hadoop::namenode': }
-  #class { 'hadoop::config': }
-  #class { 'hadoop::service': }
+  anchor{ '::hadoop::start': } ->
+  class { '::hadoop::install': } ->
+  class { '::hadoop::config': } ~>
+  class { '::hadoop::service': } ->
+  anchor{ '::hadoop::end': }
 
 }

@@ -1,16 +1,20 @@
 class hadoop::params {
 #installation related definitions
-  $version        = '2.7.3'
-  $install_dir    = "/opt/hadoop-${version}"
-  $mirror_url     = 'http://apache.rediris.es/hadoop/common'
-  $package_name   = undef
-  $package_ensure = 'present'
+  $version               = '2.7.3'
+  $install_dir           = '/opt/hadoop'
+  $mirror_url            = 'http://apache.rediris.es/hadoop/common'
+  $download_dir          = '/var/tmp/hadoop'
+  $log_dir               = '/var/log/hadoop'
+
+  $package_name          = undef
+  $package_ensure        = 'present'
+
+  $install_java          = true
+  $java_version          = '8'
   $install_dependencies  = true
   $packages_dependencies = [ 'openssh', 'rsync' ]
 
 # system user and group definitions
-  $group_id     = undef
-  $user_id      = undef
   $hdfs_user    = 'hdfs'
   $hdfs_id      = undef
   $mapred_user  = 'mapred'
@@ -20,28 +24,25 @@ class hadoop::params {
   $hadoop_group = 'hadoop'
   $hadoop_id    = undef
 
-  $install_java   = true
 #configuration related definitions
-  $package_dir    = '/var/tmp/hadoop'
-  $hadoop_etc_dir = 'etc/hadoop'
+  $cluster_name           = 'hadoop'
+  $hdfs_dir               = '/var/lib/hadoop-hdfs'
+  $hdfs_namenode_dirs     = [ $hdfs_dir ]
+  $hdfs_datanode_dirs     = [ $hdfs_dir ]
+  $hdfs_namenode_suffix      = '/dfs/name'
+  $hdfs_namesecondary_suffix = '/dfs/namesecondary'
+  $hdfs_datanode_suffix      = '/dfs/data'
 
-# systemd service definitions
+# service definitions
   $service_install = true
   $service_ensure = 'running'
-  $service_name    = 'hadoop'
   $service_restart = true
-  $service_namenode = 'hadoop-namenode'
-  $service_datanode = 'hadoop-datanode'
-  $service_resourcemanager = 'hadoop-resourcemanager'
-  $service_nodemanager = 'hadoop-nodemanager'
-  $service_historyserver = 'hadoop-historyserver'
-  $service_journalnode = 'hadoop-journalnode'
-  $service_hdfs_zkfc = 'hadoop-zkfc'
-
-  $config_defaults = {}
-  $jmx_opts = ''
-  $heap_opts = '-Xmx1G -Xms1G'
-  $log4j_opts = ''
-  $opts = ''
+  $service_namenode        = 'hadoop-hdfs-namenode'
+  $service_datanode        = 'hadoop-hdfs-datanode'
+  $service_resourcemanager = 'hadoop-yarn-resourcemanager'
+  $service_nodemanager     = 'hadoop-yarn-nodemanager'
+  $service_historyserver   = 'hadoop-mapreduce-historyserver'
+  $service_journalnode     = 'hadoop-hdfs-journalnode'
+  $service_zkfc            = 'hadoop-hdfs-zkfc'
 
 }

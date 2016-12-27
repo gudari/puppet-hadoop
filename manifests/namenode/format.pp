@@ -1,23 +1,21 @@
-class hadoop::namenode::format (
-  $install_directory = $hadoop::install_directory,
-  $package_dir       = $hadoop::package_dir,
-  $basefilename      = $hadoop::basefilename,
-  $service_user      = 'root',
-){
+class hadoop::namenode::format {
+
+  if $hadoop::cluster_name and $hadoop::cluster_name != '' {
+    $format_args = "-clusterid ${hadoop::cluster_name}"
+  } else {
+    $format_args = ''
+  }
 
   exec { 'hdfs-format-cleanup':
-    command => 'rm -f /opt/hadoop/.puppet-hdfs-root-created',
-    creates => "/opt/hadoop/.puppet-hdfs-formatted",
+    command => "rm -f ${hadoop::install_dir}/.puppet-hdfs-root-created",
+    creates => "${hadoop::install_dir}/.puppet-hdfs-formatted",
     path    => '/bin:/usr/bin',
-    user    => $service_user,
-    require => Archive[ "${package_dir}/${basefilename}" ],
-  }
-  ->
+    user    => $hadoop::hdfs_user,
+  } ->
   exec { 'hdfs-format':
-    command => "/opt/hadoop/bin/hdfs namenode -format && touch ${install_directory}/.puppet-hdfs-formatted",
-    creates => "/opt/hadoop/.puppet-hdfs-formatted",
+    command => "${hadoop::install_dir}/bin/hdfs namenode -format -nonInteractive ${format_args} && touch ${hadoop::install_dir}/.puppet-hdfs-formatted",
+    creates => "${hadoop::install_dir}/.puppet-hdfs-formatted",
     path    => '/bin:/usr/bin',
-    user    => $service_user,
-    require => Archive[ "${package_dir}/${basefilename}" ],
+    user    => $hadoop::hdfs_user,
   }
 }

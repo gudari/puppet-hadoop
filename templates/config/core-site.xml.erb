@@ -18,9 +18,12 @@
 
 <configuration>
 
+<% config = scope.lookupvar('hadoop::core_site_conf') -%>
+<% config.each do |p,v| -%>
   <property>
-    <name>fs.defaultFS</name>
-    <value>hdfs://localhost:9000</value>
+    <name><%= p -%></name>
+    <value><%= v -%></value>
   </property>
+<% end -%>
 
 </configuration>

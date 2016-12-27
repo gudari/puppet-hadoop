@@ -19,8 +19,8 @@
 <configuration>
 
   <property>
-    <name>dfs.replication</name>
-    <value>1</value>
+     <name>dfs.namenode.name.dir</name>
+     <value><%= suffix = scope.lookupvar('hadoop::hdfs_namenode_suffix'); scope.lookupvar('hadoop::hdfs_namenode_dirs').map{ |dir| "file://#{dir}#{suffix}" }.join(',') -%></value>
   </property>
 
 </configuration>
