@@ -35,12 +35,12 @@ class hadoop (
   $service_journalnode     = $hadoop::params::service_journalnode,
   $service_zkfc            = $hadoop::params::service_zkfc,
 
-  $primary_namenode = $::fqdn,
+  $primary_namenode   = $::fqdn,
   $secondary_namenode = undef,
-  $slaves = [ $::fqdn ],
-
-  $datanodes = [ $::fqdn ],
-  $journalnode_hostnames = undef,
+  $slaves             = [ $::fqdn ],
+  $datanodes          = [ $::fqdn ],
+  $journal_nodes      = undef,
+  $zookeeper_nodes    = undef,
 
   $cluster_name = $::hadoop::params::cluster_name,
 
@@ -132,6 +132,9 @@ class hadoop (
     $daemon_datanode = true
   } else {
     $daemon_datanode = false
+  }
+  if $zookeeper_nodes {
+    $zkquorum = join(join($zookeeper_nodes, ':2181,'), ':2181', '')
   }
 
   $default_core_site_conf = {
