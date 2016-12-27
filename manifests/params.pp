@@ -5,6 +5,7 @@ class hadoop::params {
   $mirror_url            = 'http://apache.rediris.es/hadoop/common'
   $download_dir          = '/var/tmp/hadoop'
   $log_dir               = '/var/log/hadoop'
+  $pid_dir               = '/var/run/hadoop'
 
   $package_name          = undef
   $package_ensure        = 'present'

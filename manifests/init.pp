@@ -5,6 +5,7 @@ class hadoop (
   $mirror_url              = $hadoop::params::mirror_url,
   $download_dir            = $hadoop::params::download_dir,
   $log_dir                 = $hadoop::params::log_dir,
+  $pid_dir                 = $hadoop::params::pid_dir,
 
   $package_name            = $hadoop::params::package_name,
   $package_ensure          = $hadoop::params::package_ensure,

@@ -45,6 +45,16 @@ class hadoop::install (
     ],
   }
 
+  file { $hadoop::pid_dir:
+    ensure  => directory,
+    owner   => $hadoop::hdfs_user,
+    group   => $hadoop::hadoop_group,
+    require => [
+      Group[$hadoop::hadoop_group],
+      User[$hadoop::hdfs_user],
+    ],
+  }
+
   if $hadoop::package_name == undef {
     include '::archive'
 
