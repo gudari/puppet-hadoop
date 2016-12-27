@@ -1,0 +1,5 @@
+<% if !scope.lookupvar('hadoop::datanodes').empty? -%>
+<% scope.lookupvar('hadoop::datanodes').each do |var| -%>
+<%= var %>
+<% end -%>
+<% end -%>

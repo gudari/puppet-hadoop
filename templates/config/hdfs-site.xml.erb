@@ -28,4 +28,12 @@
      <value><%= suffix = scope.lookupvar('hadoop::hdfs_datanode_suffix'); scope.lookupvar('hadoop::hdfs_datanode_dirs').map{ |dir| "file://#{dir}#{suffix}" }.join(',') -%></value>
   </property>
 
+<% config = scope.lookupvar('hadoop::hdfs_site_conf') -%>
+<% config.each do |p,v| -%>
+  <property>
+    <name><%= p -%></name>
+    <value><%= v -%></value>
+  </property>
+<% end -%>
+
 </configuration>

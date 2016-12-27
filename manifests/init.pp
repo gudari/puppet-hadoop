@@ -37,14 +37,15 @@ class hadoop (
 
   $primary_namenode   = $::fqdn,
   $secondary_namenode = undef,
-  $slaves             = [ $::fqdn ],
   $datanodes          = [ $::fqdn ],
+  $excluded_datanodes = [],
   $journal_nodes      = undef,
   $zookeeper_nodes    = undef,
 
   $cluster_name = $::hadoop::params::cluster_name,
 
   $overwrite_core_site_conf = {},
+  $overwrite_hdfs_site_conf = {},
   $hdfs_namenode_dirs = $::hadoop::params::hdfs_namenode_dirs,
   $hdfs_datanode_dirs = $::hadoop::params::hdfs_datanode_dirs,
 
@@ -128,7 +129,7 @@ class hadoop (
     $daemon_namenode = false
     $mapred_user = false
   }
-  if member($datanodes, $::fqdn) {
+  if member($datanodes, $::fqdn) or member($excluded_datanodes, $::fqdn) {
     $daemon_datanode = true
   } else {
     $daemon_datanode = false
@@ -138,11 +139,19 @@ class hadoop (
   }
 
   $default_core_site_conf = {
-    'fs.defaultFS'        => "hdfs://${primary_namenode}:8020",
-    'io.file.buffer.size' => '131072',
+    'fs.defaultFS'                              => "hdfs://${primary_namenode}:8020",
+    'io.file.buffer.size'                       => '131072',
+  }
+  $default_hdfs_site_conf = {
+    'dfs.datanode.hdfs-blocks-metadata.enabled' => true,
+    'dfs.hosts'                                 => "${hadoop::config_dir}/slaves",
+    'dfs.hosts.exclude'                         => "${hadoop::config_dir}/exclude",
+    'dfs.blocksize'                             => '268435456',
+    'dfs.namenode.handler.count'                => '100',
   }
 
   $core_site_conf = merge( $default_core_site_conf, $overwrite_core_site_conf)
+  $hdfs_site_conf = merge( $default_hdfs_site_conf, $overwrite_hdfs_site_conf)
 
 
   anchor{ '::hadoop::start': } ->
