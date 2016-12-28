@@ -1,19 +1,4 @@
-class hadoop::install (
-  $package_name      = $hadoop::package_name,
-  $basefilename      = $hadoop::basefilename,
-  $package_url       = $hadoop::package_url,
-  $package_dir       = $hadoop::package_dir,
-  $user_id           = $hadoop::user_id,
-  $hadoop_etc_dir    = $hadoop::hadoop_etc_dir,
-
-  $mapred_user       = $hadoop::mapred_user,
-  $mapred_id         = $hadoop::mapred_id,
-  $yarn_user         = $hadoop::yarn_user,
-  $yarn_id           = $hadoop::yarn_id,
-  $hadoop_group      = $hadoop::hadoop_group,
-  $hadoop_id         = $hadoop::hadoop_id,
-)
-{
+class hadoop::install {
 
   file { $hadoop::download_dir:
     ensure  => directory,
@@ -86,7 +71,7 @@ class hadoop::install (
   file { $hadoop::install_dir:
     ensure  => link,
     target  => $hadoop::extract_dir,
-    require => File[ $hadoop::extract_directory ],
+    require => File[ $hadoop::extract_dir ],
   }
 
   file { "${hadoop::config_dir}":

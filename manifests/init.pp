@@ -15,13 +15,6 @@ class hadoop (
   $install_dependencies    = $hadoop::params::install_dependencies,
   $packages_dependencies   = $hadoop::params::packages_dependencies,
 
-  $package_dir             = $hadoop::params::package_dir,
-  $group_id                = $hadoop::params::group_id,
-  $user_id                 = $hadoop::params::user_id,
-  $hadoop_etc_dir          = $hadoop::params::hadoop_etc_dir,
-
-  $service_name            = $hadoop::params::service_name,
-
   $hdfs_user               = $hadoop::params::hdfs_user,
   $hdfs_id                 = $hadoop::params::hdfs_id,
   $hadoop_group            = $hadoop::params::hadoop_group,
@@ -51,8 +44,8 @@ class hadoop (
 
 ) inherits hadoop::params {
 
-  validate_bool($install_java)
-  validate_bool($install_dependencies)
+  validate_legacy(Boolean, 'validate_bool', $install_java)
+  validate_legacy(Boolean, 'validate_bool', $install_dependencies)
 
   $basefilename = "hadoop-${version}.tar.gz"
   $package_url  = "${mirror_url}/hadoop-${version}/${basefilename}"
@@ -76,7 +69,7 @@ class hadoop (
 
   group { $hadoop_group:
     ensure => present,
-    gid    => $group_id,
+    gid    => $hadoop_id,
   }
 
   user { $hdfs_user:
@@ -102,7 +95,6 @@ class hadoop (
     mode    => '0400',
     source  => 'puppet:///modules/hadoop/sshkey/id_dsa',
     require => File[ "/home/${hdfs_user}/.ssh" ],
-#    before  => Service[ $hdfs_user ],
   }
   file { "/home/${hdfs_user}/.ssh/authorized_keys":
     ensure => file,
@@ -111,7 +103,6 @@ class hadoop (
     mode   => '0600',
     source => 'puppet:///modules/hadoop/sshkey/authorized_keys',
     require => File[ "/home/${hdfs_user}/.ssh" ],
-#    before  => Service[ $hdfs_user ],
   }
   file { "/home/${hdfs_user}/.ssh/known_hosts":
     ensure => file,
@@ -129,13 +120,21 @@ class hadoop (
     $daemon_namenode = false
     $mapred_user = false
   }
+  if $journal_nodes and member($journal_nodes, $fqdn) {
+    $daemon_journal = true
+  } else {
+    $daemon_journal = false
+  }
+  if $zookeeper_nodes {
+    $jn = join(join($journal_nodes, ':8485,'), ':8485', '')
+  }
+  if $zookeeper_nodes {
+    $zk = join(join($zookeeper_nodes, ':2181,'), ':2181', '')
+  }
   if member($datanodes, $::fqdn) or member($excluded_datanodes, $::fqdn) {
     $daemon_datanode = true
   } else {
     $daemon_datanode = false
-  }
-  if $zookeeper_nodes {
-    $zkquorum = join(join($zookeeper_nodes, ':2181,'), ':2181', '')
   }
 
   $default_core_site_conf = {
@@ -148,6 +147,18 @@ class hadoop (
     'dfs.hosts.exclude'                         => "${hadoop::config_dir}/exclude",
     'dfs.blocksize'                             => '268435456',
     'dfs.namenode.handler.count'                => '100',
+  }
+  $default_ha_hdfs_site_conf = {
+    'dfs.nameservices' => $hadoop::cluster_name,
+    "dfs.ha.namenodes.${cluster_name}"                   => 'nn1,nn2',
+    "dfs.namenode.rpc-address.${cluster_name}.nn1"       => "${primary_namenode}:8020",
+    "dfs.namenode.rpc-address.${cluster_name}.nn2"       => "${secondary_namenode}:8020",
+    "dfs.namenode.http-address.${cluster_name}.nn1"      => "${primary_namenode}:50070",
+    "dfs.namenode.http-address.${cluster_name}.nn2"      => "${secondary_namenode}:50070",
+    'dfs.namenode.shared.edits.dir'                      => "qjournal://${jn}/${cluster_name}",
+    "dfs.client.failover.proxy.provider.${cluster_name}" => 'org.apache.hadoop.hdfs.server.namenode.ha.ConfiguredFailoverProxyProvider',
+    'dfs.ha.fencing.methods'                             => 'shell(/bin/true)',
+    'fs.defaultFS'                                       => "hdfs://${cluster_name}",
   }
 
   $core_site_conf = merge( $default_core_site_conf, $overwrite_core_site_conf)
