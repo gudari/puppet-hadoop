@@ -26,13 +26,15 @@ class hadoop::params {
   $hadoop_id    = undef
 
 #configuration related definitions
-  $cluster_name           = 'hadoop'
-  $hdfs_dir               = '/var/lib/hadoop-hdfs'
-  $hdfs_namenode_dirs     = [ $hdfs_dir ]
-  $hdfs_datanode_dirs     = [ $hdfs_dir ]
+  $cluster_name              = 'hadoop'
+  $hdfs_dir                  = '/var/lib/hadoop-hdfs'
+  $hdfs_namenode_dirs        = [ $hdfs_dir ]
+  $hdfs_datanode_dirs        = [ $hdfs_dir ]
+  $hdfs_journal_dirs         = [ $hdfs_dir ]
   $hdfs_namenode_suffix      = '/dfs/name'
   $hdfs_namesecondary_suffix = '/dfs/namesecondary'
   $hdfs_datanode_suffix      = '/dfs/data'
+  $hdfs_journalnode_suffix   = '/dfs/journal'
 
 # service definitions
   $service_install = true

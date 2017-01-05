@@ -10,4 +10,8 @@ class hadoop::config {
     contain hadoop::datanode::config
   }
 
+  if $hadoop::daemon_journal {
+    contain hadoop::journalnode::config
+  }
+
 }

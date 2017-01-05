@@ -41,6 +41,7 @@ class hadoop (
   $overwrite_hdfs_site_conf = {},
   $hdfs_namenode_dirs = $::hadoop::params::hdfs_namenode_dirs,
   $hdfs_datanode_dirs = $::hadoop::params::hdfs_datanode_dirs,
+  $hdfs_journal_dirs  = $::hadoop::params::hdfs_journal_dirs,
 
 ) inherits hadoop::params {
 
@@ -120,14 +121,12 @@ class hadoop (
     $daemon_namenode = false
     $mapred_user = false
   }
-  if $journal_nodes and member($journal_nodes, $fqdn) {
+  if $journal_nodes and member($journal_nodes, $::fqdn) {
     $daemon_journal = true
   } else {
     $daemon_journal = false
   }
-  if $zookeeper_nodes {
-    $jn = join(join($journal_nodes, ':8485,'), ':8485', '')
-  }
+
   if $zookeeper_nodes {
     $zk = join(join($zookeeper_nodes, ':2181,'), ':2181', '')
   }
@@ -148,21 +147,29 @@ class hadoop (
     'dfs.blocksize'                             => '268435456',
     'dfs.namenode.handler.count'                => '100',
   }
-  $default_ha_hdfs_site_conf = {
-    'dfs.nameservices' => $hadoop::cluster_name,
-    "dfs.ha.namenodes.${cluster_name}"                   => 'nn1,nn2',
-    "dfs.namenode.rpc-address.${cluster_name}.nn1"       => "${primary_namenode}:8020",
-    "dfs.namenode.rpc-address.${cluster_name}.nn2"       => "${secondary_namenode}:8020",
-    "dfs.namenode.http-address.${cluster_name}.nn1"      => "${primary_namenode}:50070",
-    "dfs.namenode.http-address.${cluster_name}.nn2"      => "${secondary_namenode}:50070",
-    'dfs.namenode.shared.edits.dir'                      => "qjournal://${jn}/${cluster_name}",
-    "dfs.client.failover.proxy.provider.${cluster_name}" => 'org.apache.hadoop.hdfs.server.namenode.ha.ConfiguredFailoverProxyProvider',
-    'dfs.ha.fencing.methods'                             => 'shell(/bin/true)',
-    'fs.defaultFS'                                       => "hdfs://${cluster_name}",
+  if $journal_nodes {
+    $jn = join([ join($journal_nodes, ':8485;'), ':8485' ], '')
+    $default_ha_core_site_conf = {
+      'fs.defaultFS' => "hdfs://${cluster_name}",
+    }
+    $default_ha_hdfs_site_conf = {
+      'dfs.nameservices' => $hadoop::cluster_name,
+      "dfs.ha.namenodes.${cluster_name}"                   => 'nn1,nn2',
+      "dfs.namenode.rpc-address.${cluster_name}.nn1"       => "${primary_namenode}:8020",
+      "dfs.namenode.rpc-address.${cluster_name}.nn2"       => "${secondary_namenode}:8020",
+      "dfs.namenode.http-address.${cluster_name}.nn1"      => "${primary_namenode}:50070",
+      "dfs.namenode.http-address.${cluster_name}.nn2"      => "${secondary_namenode}:50070",
+      'dfs.namenode.shared.edits.dir'                      => "qjournal://${jn}/${cluster_name}",
+      "dfs.client.failover.proxy.provider.${cluster_name}" => 'org.apache.hadoop.hdfs.server.namenode.ha.ConfiguredFailoverProxyProvider',
+      'dfs.ha.fencing.methods'                             => 'shell(/bin/true)',
+    }
+  } else {
+      $default_ha_core_site_conf = {}
+      $default_ha_hdfs_site_conf = {}
   }
 
-  $core_site_conf = merge( $default_core_site_conf, $overwrite_core_site_conf)
-  $hdfs_site_conf = merge( $default_hdfs_site_conf, $overwrite_hdfs_site_conf)
+  $core_site_conf = merge( $default_core_site_conf, $default_ha_core_site_conf, $overwrite_core_site_conf)
+  $hdfs_site_conf = merge( $default_hdfs_site_conf, $default_ha_hdfs_site_conf, $overwrite_hdfs_site_conf)
 
 
   anchor{ '::hadoop::start': } ->

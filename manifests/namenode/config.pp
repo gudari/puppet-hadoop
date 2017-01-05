@@ -15,4 +15,11 @@ class hadoop::namenode::config {
     Class[ 'hadoop::common::config' ] -> Class[ 'hadoop::namenode::format' ]
     Class[ 'hadoop::common::hdfs::config' ] -> Class[ 'hadoop::namenode::format' ]
   }
+  if $hadoop::secondary_namenode == $::fqdn {
+    contain hadoop::namenode::bootstrap
+
+    File[$hadoop::hdfs_namenode_dirs] -> Class['hadoop::namenode::bootstrap']
+    Class['hadoop::common::config'] -> Class['hadoop::namenode::bootstrap']
+    Class['hadoop::common::hdfs::config'] -> Class['hadoop::namenode::bootstrap']
+  }
 }

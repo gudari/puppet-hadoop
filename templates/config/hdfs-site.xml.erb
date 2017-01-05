@@ -28,6 +28,11 @@
      <value><%= suffix = scope.lookupvar('hadoop::hdfs_datanode_suffix'); scope.lookupvar('hadoop::hdfs_datanode_dirs').map{ |dir| "file://#{dir}#{suffix}" }.join(',') -%></value>
   </property>
 
+  <property>
+     <name>dfs.journalnode.edits.dir</name>
+     <value><%= suffix = scope.lookupvar('hadoop::hdfs_journalnode_suffix'); scope.lookupvar('hadoop::hdfs_journal_dirs').map{ |dir| "#{dir}#{suffix}" }.join(',') -%></value>
+  </property>
+
 <% config = scope.lookupvar('hadoop::hdfs_site_conf') -%>
 <% config.each do |p,v| -%>
   <property>
