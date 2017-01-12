@@ -24,7 +24,7 @@
   </property>
 
   <property>
-     <name>dfs.namenode.data.dir</name>
+     <name>dfs.datanode.data.dir</name>
      <value><%= suffix = scope.lookupvar('hadoop::hdfs_datanode_suffix'); scope.lookupvar('hadoop::hdfs_datanode_dirs').map{ |dir| "file://#{dir}#{suffix}" }.join(',') -%></value>
   </property>
 

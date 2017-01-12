@@ -1,0 +1,22 @@
+[Unit]
+Description=Apache Hadoop Zookeeper Failover Controller
+Documentation=http://hadoop.apache.org/
+
+[Service]
+Type=simple
+User=<%= scope.lookupvar('hadoop::hdfs_user') %>
+Group=<%= scope.lookupvar('hadoop::hadoop_group') %>
+SyslogIdentifier=<%= scope.lookupvar('hadoop::service_zkfc') %>
+Environment='HADOOP_PID_DIR=<%= scope.lookupvar('hadoop::pid_dir') %>'
+Environment='HADOOP_LOG_DIR=<%= scope.lookupvar('hadoop::log_dir') %>'
+Environment='HADOOP_CONF_DIR=<%= scope.lookupvar('hadoop::config_dir') %>'
+Environment='JAVA_HOME=/usr'
+ExecStart=<%= scope.lookupvar('hadoop::install_dir') %>/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR --script hdfs start zkfc
+ExecStop=<%= scope.lookupvar('hadoop::install_dir') %>/sbin/hadoop-daemon.sh --config $HADOOP_CONF_DIR --script hdfs stop zkfc
+PIDFile=<%= scope.lookupvar('hadoop::pid_dir') %>/hadoop-hdfs-zkfc.pid
+
+LimitNOFILE=65536
+LimitCORE=infinity
+
+[Install]
+WantedBy=multi-user.target

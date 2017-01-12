@@ -128,12 +128,32 @@ class hadoop (
   }
 
   if $zookeeper_nodes {
-    $zk = join(join($zookeeper_nodes, ':2181,'), ':2181', '')
+    $zk = join([ join($zookeeper_nodes, ':2181,'), ':2181' ], '')
+  }
+  if $zookeeper_nodes and $secondary_namenode {
+    $zoo_hdfs_site_conf = {
+      'dfs.ha.automatic-failover.enabled' => true,
+    }
+    $zoo_core_site_conf = {
+      'ha.zookeeper.quorum' => $zk,
+    }
+  } else {
+    $zoo_hdfs_site_conf = undef
+    $zoo_core_site_conf = undef
   }
   if member($datanodes, $::fqdn) or member($excluded_datanodes, $::fqdn) {
     $daemon_datanode = true
   } else {
     $daemon_datanode = false
+  }
+  if $secondary_namenode {
+    if $daemon_namenode and $zookeeper_nodes {
+      $daemon_zkfc = true
+    } else {
+      $daemon_zkfc = false
+    }
+  } else {
+    $daemon_zkfc = false
   }
 
   $default_core_site_conf = {
@@ -168,8 +188,8 @@ class hadoop (
       $default_ha_hdfs_site_conf = {}
   }
 
-  $core_site_conf = merge( $default_core_site_conf, $default_ha_core_site_conf, $overwrite_core_site_conf)
-  $hdfs_site_conf = merge( $default_hdfs_site_conf, $default_ha_hdfs_site_conf, $overwrite_hdfs_site_conf)
+  $core_site_conf = merge( $default_core_site_conf, $default_ha_core_site_conf, $zoo_core_site_conf, $overwrite_core_site_conf)
+  $hdfs_site_conf = merge( $default_hdfs_site_conf, $default_ha_hdfs_site_conf, $zoo_hdfs_site_conf, $overwrite_hdfs_site_conf)
 
 
   anchor{ '::hadoop::start': } ->
