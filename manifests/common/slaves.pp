@@ -13,7 +13,7 @@ class hadoop::common::slaves {
     content => template('hadoop/config/exclude.erb'),
   }
 
-  file { "${hadoop::config_dir}/slave-yarn":
+  file { "${hadoop::config_dir}/slaves-yarn":
     owner   => $hadoop::hdfs_user,
     group   => $hadoop::hadoop_group,
     mode    => '0644',

@@ -153,6 +153,14 @@ class hadoop (
     $zoo_hdfs_site_conf = undef
     $zoo_core_site_conf = undef
   }
+  if $zookeeper_nodes and $secondary_resourcemanager {
+    $zoo_yarn_site_conf = {
+      'yarn.resourcemanager.ha.automatic-failover.enabled' => true,
+      'yarn.resourcemanager.zk-address' => $zk,
+    }
+  } else {
+    $zoo_yarn_site_conf = undef
+  }
   if member($datanodes, $::fqdn) or member($excluded_datanodes, $::fqdn) {
     $daemon_datanode = true
   } else {
@@ -215,13 +223,16 @@ class hadoop (
   } else {
     $default_yarn_site_conf = {}
   }
-  if $primary_resourcemanager and $secondary_resourcemanager {
+  if $secondary_resourcemanager {
     $default_ha_yarn_site_conf = {
       'yarn.resourcemanager.cluster-id'   => $hadoop::cluster_name,
       'yarn.resourcemanager.ha.enabled'   => true,
       'yarn.resourcemanager.ha.rm-ids'    => 'rm1,rm2',
-      'yarn.resourcemanager.hostname.rm1' => $secondary_nodemanager,
-      'yarn.resourcemanager.hostname.rm2' => $primary_nodemanager,
+      'yarn.resourcemanager.hostname.rm1' => $primary_resourcemanager,
+      'yarn.resourcemanager.hostname.rm2' => $secondary_resourcemanager,
+    }
+    if $zookeeper_nodes {
+      $default_ha_yarn_site_conf
     }
   } else {
       $default_ha_yarn_site_conf = {}
@@ -229,7 +240,7 @@ class hadoop (
 
   $core_site_conf = merge( $default_core_site_conf, $default_ha_core_site_conf, $zoo_core_site_conf, $overwrite_core_site_conf)
   $hdfs_site_conf = merge( $default_hdfs_site_conf, $default_ha_hdfs_site_conf, $zoo_hdfs_site_conf, $overwrite_hdfs_site_conf)
-  $yarn_site_conf = merge( $default_yarn_site_conf, $default_ha_yarn_site_conf, $overwrite_yarn_site_conf)
+  $yarn_site_conf = merge( $default_yarn_site_conf, $default_ha_yarn_site_conf, $zoo_yarn_site_conf, $overwrite_yarn_site_conf)
 
 
   anchor{ '::hadoop::start': } ->
