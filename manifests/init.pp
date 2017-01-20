@@ -34,11 +34,16 @@ class hadoop (
   $excluded_datanodes = [],
   $journal_nodes      = undef,
   $zookeeper_nodes    = undef,
+  $primary_resourcemanager = $::fqdn,
+  $secondary_resourcemanager = undef,
+  $nodemanager_nodes = [],
+  $excluded_nodemanagers = [],
 
   $cluster_name = $::hadoop::params::cluster_name,
 
   $overwrite_core_site_conf = {},
   $overwrite_hdfs_site_conf = {},
+  $overwrite_yarn_site_conf = {},
   $hdfs_namenode_dirs = $::hadoop::params::hdfs_namenode_dirs,
   $hdfs_datanode_dirs = $::hadoop::params::hdfs_datanode_dirs,
   $hdfs_journal_dirs  = $::hadoop::params::hdfs_journal_dirs,
@@ -126,6 +131,13 @@ class hadoop (
   } else {
     $daemon_journal = false
   }
+  if $::fqdn == $primary_resourcemanager or $::fqdn == $secondary_resourcemanager {
+    $daemon_resourcemanager = true
+    $framework = 'yarn'
+  } else {
+    $daemon_resourcemanager = false
+    $framework = undef
+  }
 
   if $zookeeper_nodes {
     $zk = join([ join($zookeeper_nodes, ':2181,'), ':2181' ], '')
@@ -145,6 +157,11 @@ class hadoop (
     $daemon_datanode = true
   } else {
     $daemon_datanode = false
+  }
+  if member($nodemanager_nodes, $::fqdn) or member($excluded_nodemanagers, $::fqdn) {
+    $daemon_nodemanager = true
+  } else {
+    $daemon_nodemanager = false
   }
   if $secondary_namenode {
     if $daemon_namenode and $zookeeper_nodes {
@@ -187,9 +204,32 @@ class hadoop (
       $default_ha_core_site_conf = {}
       $default_ha_hdfs_site_conf = {}
   }
+  if $primary_resourcemanager {
+    $default_yarn_site_conf = {
+      'yarn.resourcemanager.hostname' => '0.0.0.0',
+      'yarn.resourcemanager.nodes.include-path' => "${hadoop::config_dir}/slaves-yarn",
+      'yarn.resourcemanager.nodes.exclude-path' => "${hadoop::config_dir}/exclude-yarn",
+      'yarn.nodemanager.aux-services' => 'mapreduce_shuffle',
+      'yarn.nodemanager.log-dirs' => '/var/log/hadoop',
+    }
+  } else {
+    $default_yarn_site_conf = {}
+  }
+  if $primary_resourcemanager and $secondary_resourcemanager {
+    $default_ha_yarn_site_conf = {
+      'yarn.resourcemanager.cluster-id'   => $hadoop::cluster_name,
+      'yarn.resourcemanager.ha.enabled'   => true,
+      'yarn.resourcemanager.ha.rm-ids'    => 'rm1,rm2',
+      'yarn.resourcemanager.hostname.rm1' => $secondary_nodemanager,
+      'yarn.resourcemanager.hostname.rm2' => $primary_nodemanager,
+    }
+  } else {
+      $default_ha_yarn_site_conf = {}
+  }
 
   $core_site_conf = merge( $default_core_site_conf, $default_ha_core_site_conf, $zoo_core_site_conf, $overwrite_core_site_conf)
   $hdfs_site_conf = merge( $default_hdfs_site_conf, $default_ha_hdfs_site_conf, $zoo_hdfs_site_conf, $overwrite_hdfs_site_conf)
+  $yarn_site_conf = merge( $default_yarn_site_conf, $default_ha_yarn_site_conf, $overwrite_yarn_site_conf)
 
 
   anchor{ '::hadoop::start': } ->

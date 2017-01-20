@@ -1,0 +1,5 @@
+<% if !scope.lookupvar('hadoop::excluded_nodemanagers').empty? -%>
+<% scope.lookupvar('hadoop::excluded_nodemanagers').each do |var| -%>
+<%= var %>
+<% end -%>
+<% end -%>

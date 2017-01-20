@@ -1,5 +1,7 @@
 class hadoop::common::yarn::config {
 
+  include ::hadoop::common::slaves
+
   file { "${hadoop::config_dir}/yarn-site.xml":
     ensure  => present,
     mode    => '0644',

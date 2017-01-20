@@ -14,9 +14,12 @@
 -->
 <configuration>
 
+<% config = scope.lookupvar('hadoop::yarn_site_conf') -%>
+<% config.each do |p,v| -%>
   <property>
-    <name>yarn.nodemanager.aux-services</name>
-    <value>mapreduce_shuffle</value>
+    <name><%= p -%></name>
+    <value><%= v -%></value>
   </property>
+<% end -%>
 
 </configuration>
