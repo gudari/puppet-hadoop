@@ -206,7 +206,7 @@ class hadoop (
   }
   if $primary_resourcemanager {
     $default_yarn_site_conf = {
-      'yarn.resourcemanager.hostname' => '0.0.0.0',
+      'yarn.resourcemanager.hostname' => $primary_resourcemanager,
       'yarn.resourcemanager.nodes.include-path' => "${hadoop::config_dir}/slaves-yarn",
       'yarn.resourcemanager.nodes.exclude-path' => "${hadoop::config_dir}/exclude-yarn",
       'yarn.nodemanager.aux-services' => 'mapreduce_shuffle',

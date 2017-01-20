@@ -6,7 +6,7 @@ class hadoop::config {
   if $hadoop::daemon_journal { contain hadoop::journalnode::config }
   if $hadoop::daemon_zkfc { contain hadoop::zkfc::format }
   if $hadoop::daemon_resourcemanager { contain hadoop::resourcemanager::config }
-  if $hadoop::daemon_nodemanger { contain hadoop::nodemanager::config }
+  if $hadoop::daemon_nodemanager { contain hadoop::nodemanager::config }
  # if $hadoop::daemon_historyserver { contain hadoop::historyserver::config }
 
 }
