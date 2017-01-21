@@ -44,8 +44,8 @@ class hadoop::params {
   $service_datanode        = 'hadoop-hdfs-datanode'
   $service_resourcemanager = 'hadoop-yarn-resourcemanager'
   $service_nodemanager     = 'hadoop-yarn-nodemanager'
-  $service_historyserver   = 'hadoop-mapreduce-historyserver'
   $service_journalnode     = 'hadoop-hdfs-journalnode'
   $service_zkfc            = 'hadoop-hdfs-zkfc'
+  $service_historyserver   = 'hadoop-mapreduce-historyserver'
 
 }

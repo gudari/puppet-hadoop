@@ -38,12 +38,14 @@ class hadoop (
   $secondary_resourcemanager = undef,
   $nodemanager_nodes = [],
   $excluded_nodemanagers = [],
+  $historyserver = undef,
 
   $cluster_name = $::hadoop::params::cluster_name,
 
   $overwrite_core_site_conf = {},
   $overwrite_hdfs_site_conf = {},
   $overwrite_yarn_site_conf = {},
+  $overwrite_mapred_site_conf = {},
   $hdfs_namenode_dirs = $::hadoop::params::hdfs_namenode_dirs,
   $hdfs_datanode_dirs = $::hadoop::params::hdfs_datanode_dirs,
   $hdfs_journal_dirs  = $::hadoop::params::hdfs_journal_dirs,
@@ -133,10 +135,20 @@ class hadoop (
   }
   if $::fqdn == $primary_resourcemanager or $::fqdn == $secondary_resourcemanager {
     $daemon_resourcemanager = true
-    $framework = 'yarn'
   } else {
     $daemon_resourcemanager = false
+  }
+
+  if $primary_resourcemanager {
+    $framework = 'yarn'
+  } else {
     $framework = undef
+  }
+
+  if $::fqdn == $historyserver {
+    $daemon_historyserver = true
+  } else {
+    $daemon_historyserver = false
   }
 
   if $zookeeper_nodes {
@@ -192,6 +204,11 @@ class hadoop (
     'dfs.blocksize'                             => '268435456',
     'dfs.namenode.handler.count'                => '100',
   }
+  $default_mapred_site_conf = {
+    'mapreduce.framework.name' => $framework,
+    'mapreduce.jobhistory.address' => "${historyserver}:10020",
+    'mapreduce.jobhistory.webapp.address' => "${historyserver}:19888"
+  }
   if $journal_nodes {
     $jn = join([ join($journal_nodes, ':8485;'), ':8485' ], '')
     $default_ha_core_site_conf = {
@@ -238,9 +255,10 @@ class hadoop (
       $default_ha_yarn_site_conf = {}
   }
 
-  $core_site_conf = merge( $default_core_site_conf, $default_ha_core_site_conf, $zoo_core_site_conf, $overwrite_core_site_conf)
-  $hdfs_site_conf = merge( $default_hdfs_site_conf, $default_ha_hdfs_site_conf, $zoo_hdfs_site_conf, $overwrite_hdfs_site_conf)
-  $yarn_site_conf = merge( $default_yarn_site_conf, $default_ha_yarn_site_conf, $zoo_yarn_site_conf, $overwrite_yarn_site_conf)
+  $core_site_conf   = merge( $default_core_site_conf, $default_ha_core_site_conf, $zoo_core_site_conf, $overwrite_core_site_conf)
+  $hdfs_site_conf   = merge( $default_hdfs_site_conf, $default_ha_hdfs_site_conf, $zoo_hdfs_site_conf, $overwrite_hdfs_site_conf)
+  $mapred_site_conf = merge( $default_mapred_site_conf, $overwrite_mapred_site_conf )
+  $yarn_site_conf   = merge( $default_yarn_site_conf, $default_ha_yarn_site_conf, $zoo_yarn_site_conf, $overwrite_yarn_site_conf)
 
 
   anchor{ '::hadoop::start': } ->

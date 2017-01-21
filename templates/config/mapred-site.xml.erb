@@ -18,9 +18,12 @@
 
 <configuration>
 
+<% config = scope.lookupvar('hadoop::mapred_site_conf') -%>
+<% config.each do |p,v| -%>
   <property>
-    <name>mapreduce.framework.name</name>
-    <value>yarn</value>
+    <name><%= p -%></name>
+    <value><%= v -%></value>
   </property>
+<% end -%>
 
 </configuration>
