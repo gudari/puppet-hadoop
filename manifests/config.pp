@@ -8,5 +8,6 @@ class hadoop::config {
   if $hadoop::daemon_resourcemanager { contain hadoop::resourcemanager::config }
   if $hadoop::daemon_nodemanager { contain hadoop::nodemanager::config }
   if $hadoop::daemon_historyserver { contain hadoop::historyserver::config }
+  if $hadoop::daemon_timelineserver { contain hadoop::timelineserver::config }
 
 }

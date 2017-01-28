@@ -39,6 +39,9 @@ class hadoop (
   $nodemanager_nodes = [],
   $excluded_nodemanagers = [],
   $historyserver = undef,
+  $timelineserver = undef,
+  $nfs = undef,
+  $httpfs = undef,
 
   $cluster_name = $::hadoop::params::cluster_name,
 
@@ -49,6 +52,10 @@ class hadoop (
   $hdfs_namenode_dirs = $::hadoop::params::hdfs_namenode_dirs,
   $hdfs_datanode_dirs = $::hadoop::params::hdfs_datanode_dirs,
   $hdfs_journal_dirs  = $::hadoop::params::hdfs_journal_dirs,
+
+  $install_tez = true,
+  $install_tez_ui = false,
+  $overwrite_tez_site_conf = {},
 
 ) inherits hadoop::params {
 
@@ -193,6 +200,31 @@ class hadoop (
     $daemon_zkfc = false
   }
 
+  if $timelineserver == $::fqdn {
+    $daemon_timelineserver = true
+    $tl_yarn_site_conf = {
+     'yarn.timeline-service.hostname' => $::fqdn,
+     'yarn.timeline-service.enable'   => true,
+     'yarn.resourcemanager.system-metrics-publisher.enabled' => true,
+     'yarn.timeline-service.generic-application-history.enabled' => true,
+    }
+  } else {
+    $daemon_timelineserver = false
+    $tl_yarn_site_conf = {}
+  }
+
+  if $nfs == $::fqdn {
+    $daemon_nfs = true
+  } else {
+    $daemon_nfs = false
+  }
+
+  if $httpfs == $::fqdn {
+    $daemon_httpfs = true
+  } else {
+    $daemon_httpfs = false
+  }
+
   $default_core_site_conf = {
     'fs.defaultFS'                              => "hdfs://${primary_namenode}:8020",
     'io.file.buffer.size'                       => '131072',
@@ -255,10 +287,18 @@ class hadoop (
       $default_ha_yarn_site_conf = {}
   }
 
+  if $install_tez {
+    $default_tez_site_conf = {
+
+    }
+    $tez_site_conf = merge( $default_tez_site_conf, $overwrite_tez_site_conf )
+    class { '::hadoop::tez::download': }
+  }
+
   $core_site_conf   = merge( $default_core_site_conf, $default_ha_core_site_conf, $zoo_core_site_conf, $overwrite_core_site_conf)
-  $hdfs_site_conf   = merge( $default_hdfs_site_conf, $default_ha_hdfs_site_conf, $zoo_hdfs_site_conf, $overwrite_hdfs_site_conf)
+  $hdfs_site_conf   = merge( $default_hdfs_site_conf, $default_ha_hdfs_site_conf, $zoo_hdfs_site_conf, $httpfs_hdfs_site_conf, $nfs_hdfs_site_conf, $overwrite_hdfs_site_conf)
   $mapred_site_conf = merge( $default_mapred_site_conf, $overwrite_mapred_site_conf )
-  $yarn_site_conf   = merge( $default_yarn_site_conf, $default_ha_yarn_site_conf, $zoo_yarn_site_conf, $overwrite_yarn_site_conf)
+  $yarn_site_conf   = merge( $default_yarn_site_conf, $default_ha_yarn_site_conf, $zoo_yarn_site_conf, $tl_yarn_site_conf, $overwrite_yarn_site_conf)
 
 
   anchor{ '::hadoop::start': } ->

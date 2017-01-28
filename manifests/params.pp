@@ -47,5 +47,8 @@ class hadoop::params {
   $service_journalnode     = 'hadoop-hdfs-journalnode'
   $service_zkfc            = 'hadoop-hdfs-zkfc'
   $service_historyserver   = 'hadoop-mapreduce-historyserver'
+  $service_timelineserver  = 'hadoop-yarn-timelineserver'
+  $service_nfs             = 'hadoop-hdfs-nfs3'
+  $service_httpfs          = 'haddop-httpfs'
 
 }

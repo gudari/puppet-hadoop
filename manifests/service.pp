@@ -6,4 +6,5 @@ class hadoop::service {
   if $hadoop::daemon_resourcemanager { contain hadoop::resourcemanager::service }
   if $hadoop::daemon_nodemanager { contain hadoop::nodemanager::service }
   if $hadoop::daemon_historyserver { contain hadoop::historyserver::service }
+  if $hadoop::daemon_timelineserver { contain hadoop::timelineserver::service }
 }
