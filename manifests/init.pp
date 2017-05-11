@@ -66,7 +66,7 @@ class hadoop (
   $package_url  = "${mirror_url}/hadoop-${version}/${basefilename}"
   $extract_dir  = "/opt/hadoop-${version}"
 
-  if $install_java {
+  if $install_java == true {
     java::oracle { 'jdk8':
       ensure  => 'present',
       version => $java_version,
