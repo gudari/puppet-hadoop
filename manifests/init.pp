@@ -10,8 +10,6 @@ class hadoop (
   $package_name            = $hadoop::params::package_name,
   $package_ensure          = $hadoop::params::package_ensure,
 
-  $install_java            = $hadoop::params::install_java,
-  $java_version            = $hadoop::params::java_version,
   $install_dependencies    = $hadoop::params::install_dependencies,
   $packages_dependencies   = $hadoop::params::packages_dependencies,
 
@@ -65,15 +63,6 @@ class hadoop (
   $basefilename = "hadoop-${version}.tar.gz"
   $package_url  = "${mirror_url}/hadoop-${version}/${basefilename}"
   $extract_dir  = "/opt/hadoop-${version}"
-
-  if $install_java == true {
-    java::oracle { 'jdk8':
-      ensure  => 'present',
-      version => $java_version,
-      java_se => 'jdk',
-      before  => Archive[ "${download_dir}/${basefilename}" ]
-    }
-  }
 
   if $install_dependencies {
     package { $packages_dependencies:
