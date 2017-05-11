@@ -57,7 +57,6 @@ class hadoop (
 
 ) inherits hadoop::params {
 
-  validate_legacy(Boolean, 'validate_bool', $install_java)
   validate_legacy(Boolean, 'validate_bool', $install_dependencies)
 
   $basefilename = "hadoop-${version}.tar.gz"
