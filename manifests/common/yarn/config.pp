@@ -3,7 +3,7 @@ class hadoop::common::yarn::config {
   include ::hadoop::common::slaves
 
   file { "${hadoop::config_dir}/yarn-site.xml":
-    ensure  => present,
+    ensure  => file,
     mode    => '0644',
     owner   => $hadoop::hdfs_user,
     group   => $hadoop::hadoop_group,
@@ -11,14 +11,13 @@ class hadoop::common::yarn::config {
     require => File[ $hadoop::config_dir ],
   }
 
-  if $::hadoop::install_tez {
-    file { "${hadoop::config_dir}/tez-site.xml":
-      ensure  => present,
-      mode    => '0644',
-      owner   => $hadoop::hdfs_user,
-      group   => $hadoop::hadoop_group,
-      content => template('hadoop/config/tez-site.xml.erb'),
-      require => File[ $hadoop::config_dir ],
-    }
+  file { "${hadoop::config_dir}/capacity-scheduler.xml":
+    ensure  => file,
+    mode    => '0644',
+    owner   => $hadoop::hdfs_user,
+    group   => $hadoop::hadoop_group,
+    content => template('hadoop/config/capacity-scheduler.xml.erb'),
+    require => File[ $hadoop::config_dir ],
   }
+
 }

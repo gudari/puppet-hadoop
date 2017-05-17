@@ -49,13 +49,10 @@ class hadoop (
   $overwrite_hdfs_site_conf = {},
   $overwrite_yarn_site_conf = {},
   $overwrite_mapred_site_conf = {},
+  $overwrite_capacity_scheduler = {},
   $hdfs_namenode_dirs = $::hadoop::params::hdfs_namenode_dirs,
   $hdfs_datanode_dirs = $::hadoop::params::hdfs_datanode_dirs,
   $hdfs_journal_dirs  = $::hadoop::params::hdfs_journal_dirs,
-
-  $install_tez = true,
-  $install_tez_ui = false,
-  $overwrite_tez_site_conf = {},
 
 ) inherits hadoop::params {
 
@@ -287,19 +284,27 @@ class hadoop (
       $default_ha_yarn_site_conf = {}
   }
 
-  if $install_tez {
-    $default_tez_site_conf = {
-
-    }
-    $tez_site_conf = merge( $default_tez_site_conf, $overwrite_tez_site_conf )
-    class { '::hadoop::tez::download': }
+  $default_capacity_scheduler = {
+    'yarn.scheduler.capacity.maximum-applications'                             => '10000',
+    'yarn.scheduler.capacity.maximum-am-resource-percent'                      => '0.1',
+    'yarn.scheduler.capacity.resource-calculator'                              => 'org.apache.hadoop.yarn.util.resource.DefaultResourceCalculator',
+    'yarn.scheduler.capacity.root.queues'                                      => 'default',
+    'yarn.scheduler.capacity.root.default.capacity'                            => '100',
+    'yarn.scheduler.capacity.root.default.user-limit-factor'                   => '1',
+    'yarn.scheduler.capacity.root.default.maximum-capacity'                    => '100',
+    'yarn.scheduler.capacity.root.default.state'                               => 'RUNNING',
+    'yarn.scheduler.capacity.root.default.acl_submit_applications'             => '*',
+    'yarn.scheduler.capacity.root.default.acl_administer_queue'                => '*',
+    'yarn.scheduler.capacity.node-locality-delay'                              => '40',
+    'yarn.scheduler.capacity.queue-mappings-override.enable'                   => 'false',
+    'yarn.scheduler.capacity.per-node-heartbeat.maximum-offswitch-assignments' => '1',
   }
 
   $core_site_conf   = merge( $default_core_site_conf, $default_ha_core_site_conf, $zoo_core_site_conf, $overwrite_core_site_conf)
   $hdfs_site_conf   = merge( $default_hdfs_site_conf, $default_ha_hdfs_site_conf, $zoo_hdfs_site_conf, $httpfs_hdfs_site_conf, $nfs_hdfs_site_conf, $overwrite_hdfs_site_conf)
   $mapred_site_conf = merge( $default_mapred_site_conf, $overwrite_mapred_site_conf )
   $yarn_site_conf   = merge( $default_yarn_site_conf, $default_ha_yarn_site_conf, $zoo_yarn_site_conf, $tl_yarn_site_conf, $overwrite_yarn_site_conf)
-
+  $capacity_scheduler = merge( $default_capacity_scheduler, $overwrite_capacity_scheduler )
 
   anchor{ '::hadoop::start': } ->
   class { '::hadoop::install': } ->
