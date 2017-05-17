@@ -82,10 +82,10 @@ class hadoop (
   }
 
   file { "/home/${hdfs_user}/.ssh":
-    ensure => directory,
-    owner  => $hdfs_user,
-    group  => $hadoop_group,
-    mode   => '0700',
+    ensure  => directory,
+    owner   => $hdfs_user,
+    group   => $hadoop_group,
+    mode    => '0700',
     require => User[ $hdfs_user ],
   }
   file { "/home/${hdfs_user}/.ssh/id_dsa":
@@ -97,19 +97,19 @@ class hadoop (
     require => File[ "/home/${hdfs_user}/.ssh" ],
   }
   file { "/home/${hdfs_user}/.ssh/authorized_keys":
-    ensure => file,
-    owner  => $hdfs_user,
-    group  => $hadoop_group,
-    mode   => '0600',
-    source => 'puppet:///modules/hadoop/sshkey/authorized_keys',
+    ensure  => file,
+    owner   => $hdfs_user,
+    group   => $hadoop_group,
+    mode    => '0600',
+    source  => 'puppet:///modules/hadoop/sshkey/authorized_keys',
     require => File[ "/home/${hdfs_user}/.ssh" ],
   }
   file { "/home/${hdfs_user}/.ssh/known_hosts":
-    ensure => file,
-    owner  => $hdfs_user,
-    group  => $hadoop_group,
-    mode   => '0644',
-    source => 'puppet:///modules/hadoop/sshkey/known_hosts',
+    ensure  => file,
+    owner   => $hdfs_user,
+    group   => $hadoop_group,
+    mode    => '0644',
+    source  => 'puppet:///modules/hadoop/sshkey/known_hosts',
     require => File[ "/home/${hdfs_user}/.ssh" ],
   }
 
@@ -188,10 +188,10 @@ class hadoop (
   if $timelineserver == $::fqdn {
     $daemon_timelineserver = true
     $tl_yarn_site_conf = {
-     'yarn.timeline-service.hostname' => $::fqdn,
-     'yarn.timeline-service.enable'   => true,
-     'yarn.resourcemanager.system-metrics-publisher.enabled' => true,
-     'yarn.timeline-service.generic-application-history.enabled' => true,
+      'yarn.timeline-service.hostname'                            => $::fqdn,
+      'yarn.timeline-service.enable'                              => true,
+      'yarn.resourcemanager.system-metrics-publisher.enabled'     => true,
+      'yarn.timeline-service.generic-application-history.enabled' => true,
     }
   } else {
     $daemon_timelineserver = false
@@ -224,7 +224,7 @@ class hadoop (
   $default_mapred_site_conf = {
     'mapreduce.framework.name' => $framework,
     'mapreduce.jobhistory.address' => "${historyserver}:10020",
-    'mapreduce.jobhistory.webapp.address' => "${historyserver}:19888"
+    'mapreduce.jobhistory.webapp.address' => "${historyserver}:19888",
   }
   if $journal_nodes {
     $jn = join([ join($journal_nodes, ':8485;'), ':8485' ], '')
@@ -243,16 +243,16 @@ class hadoop (
       'dfs.ha.fencing.methods'                             => 'shell(/bin/true)',
     }
   } else {
-      $default_ha_core_site_conf = {}
-      $default_ha_hdfs_site_conf = {}
+    $default_ha_core_site_conf = {}
+    $default_ha_hdfs_site_conf = {}
   }
   if $primary_resourcemanager {
     $default_yarn_site_conf = {
-      'yarn.resourcemanager.hostname' => $primary_resourcemanager,
+      'yarn.resourcemanager.hostname'           => $primary_resourcemanager,
       'yarn.resourcemanager.nodes.include-path' => "${hadoop::config_dir}/slaves-yarn",
       'yarn.resourcemanager.nodes.exclude-path' => "${hadoop::config_dir}/exclude-yarn",
-      'yarn.nodemanager.aux-services' => 'mapreduce_shuffle',
-      'yarn.nodemanager.log-dirs' => '/var/log/hadoop',
+      'yarn.nodemanager.aux-services'           => 'mapreduce_shuffle',
+      'yarn.nodemanager.log-dirs'               => '/var/log/hadoop',
     }
   } else {
     $default_yarn_site_conf = {}
@@ -268,8 +268,9 @@ class hadoop (
     if $zookeeper_nodes {
       $default_ha_yarn_site_conf
     }
-  } else {
-      $default_ha_yarn_site_conf = {}
+  }
+  else {
+    $default_ha_yarn_site_conf = {}
   }
 
   $default_capacity_scheduler = {
