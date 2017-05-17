@@ -47,6 +47,7 @@ class hadoop (
   $overwrite_hdfs_site_conf = {},
   $overwrite_yarn_site_conf = {},
   $overwrite_mapred_site_conf = {},
+  $overwrite_capacity_scheduler = {},
   $hdfs_namenode_dirs = $::hadoop::params::hdfs_namenode_dirs,
   $hdfs_datanode_dirs = $::hadoop::params::hdfs_datanode_dirs,
   $hdfs_journal_dirs  = $::hadoop::params::hdfs_journal_dirs,
@@ -81,10 +82,10 @@ class hadoop (
   }
 
   file { "/home/${hdfs_user}/.ssh":
-    ensure => directory,
-    owner  => $hdfs_user,
-    group  => $hadoop_group,
-    mode   => '0700',
+    ensure  => directory,
+    owner   => $hdfs_user,
+    group   => $hadoop_group,
+    mode    => '0700',
     require => User[ $hdfs_user ],
   }
   file { "/home/${hdfs_user}/.ssh/id_dsa":
@@ -96,19 +97,19 @@ class hadoop (
     require => File[ "/home/${hdfs_user}/.ssh" ],
   }
   file { "/home/${hdfs_user}/.ssh/authorized_keys":
-    ensure => file,
-    owner  => $hdfs_user,
-    group  => $hadoop_group,
-    mode   => '0600',
-    source => 'puppet:///modules/hadoop/sshkey/authorized_keys',
+    ensure  => file,
+    owner   => $hdfs_user,
+    group   => $hadoop_group,
+    mode    => '0600',
+    source  => 'puppet:///modules/hadoop/sshkey/authorized_keys',
     require => File[ "/home/${hdfs_user}/.ssh" ],
   }
   file { "/home/${hdfs_user}/.ssh/known_hosts":
-    ensure => file,
-    owner  => $hdfs_user,
-    group  => $hadoop_group,
-    mode   => '0644',
-    source => 'puppet:///modules/hadoop/sshkey/known_hosts',
+    ensure  => file,
+    owner   => $hdfs_user,
+    group   => $hadoop_group,
+    mode    => '0644',
+    source  => 'puppet:///modules/hadoop/sshkey/known_hosts',
     require => File[ "/home/${hdfs_user}/.ssh" ],
   }
 
@@ -187,10 +188,10 @@ class hadoop (
   if $timelineserver == $::fqdn {
     $daemon_timelineserver = true
     $tl_yarn_site_conf = {
-     'yarn.timeline-service.hostname' => $::fqdn,
-     'yarn.timeline-service.enable'   => true,
-     'yarn.resourcemanager.system-metrics-publisher.enabled' => true,
-     'yarn.timeline-service.generic-application-history.enabled' => true,
+      'yarn.timeline-service.hostname'                            => $::fqdn,
+      'yarn.timeline-service.enable'                              => true,
+      'yarn.resourcemanager.system-metrics-publisher.enabled'     => true,
+      'yarn.timeline-service.generic-application-history.enabled' => true,
     }
   } else {
     $daemon_timelineserver = false
@@ -223,7 +224,7 @@ class hadoop (
   $default_mapred_site_conf = {
     'mapreduce.framework.name' => $framework,
     'mapreduce.jobhistory.address' => "${historyserver}:10020",
-    'mapreduce.jobhistory.webapp.address' => "${historyserver}:19888"
+    'mapreduce.jobhistory.webapp.address' => "${historyserver}:19888",
   }
   if $journal_nodes {
     $jn = join([ join($journal_nodes, ':8485;'), ':8485' ], '')
@@ -242,16 +243,16 @@ class hadoop (
       'dfs.ha.fencing.methods'                             => 'shell(/bin/true)',
     }
   } else {
-      $default_ha_core_site_conf = {}
-      $default_ha_hdfs_site_conf = {}
+    $default_ha_core_site_conf = {}
+    $default_ha_hdfs_site_conf = {}
   }
   if $primary_resourcemanager {
     $default_yarn_site_conf = {
-      'yarn.resourcemanager.hostname' => $primary_resourcemanager,
+      'yarn.resourcemanager.hostname'           => $primary_resourcemanager,
       'yarn.resourcemanager.nodes.include-path' => "${hadoop::config_dir}/slaves-yarn",
       'yarn.resourcemanager.nodes.exclude-path' => "${hadoop::config_dir}/exclude-yarn",
-      'yarn.nodemanager.aux-services' => 'mapreduce_shuffle',
-      'yarn.nodemanager.log-dirs' => '/var/log/hadoop',
+      'yarn.nodemanager.aux-services'           => 'mapreduce_shuffle',
+      'yarn.nodemanager.log-dirs'               => '/var/log/hadoop',
     }
   } else {
     $default_yarn_site_conf = {}
@@ -267,15 +268,32 @@ class hadoop (
     if $zookeeper_nodes {
       $default_ha_yarn_site_conf
     }
-  } else {
-      $default_ha_yarn_site_conf = {}
+  }
+  else {
+    $default_ha_yarn_site_conf = {}
+  }
+
+  $default_capacity_scheduler = {
+    'yarn.scheduler.capacity.maximum-applications'                             => '10000',
+    'yarn.scheduler.capacity.maximum-am-resource-percent'                      => '0.1',
+    'yarn.scheduler.capacity.resource-calculator'                              => 'org.apache.hadoop.yarn.util.resource.DefaultResourceCalculator',
+    'yarn.scheduler.capacity.root.queues'                                      => 'default',
+    'yarn.scheduler.capacity.root.default.capacity'                            => '100',
+    'yarn.scheduler.capacity.root.default.user-limit-factor'                   => '1',
+    'yarn.scheduler.capacity.root.default.maximum-capacity'                    => '100',
+    'yarn.scheduler.capacity.root.default.state'                               => 'RUNNING',
+    'yarn.scheduler.capacity.root.default.acl_submit_applications'             => '*',
+    'yarn.scheduler.capacity.root.default.acl_administer_queue'                => '*',
+    'yarn.scheduler.capacity.node-locality-delay'                              => '40',
+    'yarn.scheduler.capacity.queue-mappings-override.enable'                   => 'false',
+    'yarn.scheduler.capacity.per-node-heartbeat.maximum-offswitch-assignments' => '1',
   }
 
   $core_site_conf   = merge( $default_core_site_conf, $default_ha_core_site_conf, $zoo_core_site_conf, $overwrite_core_site_conf)
   $hdfs_site_conf   = merge( $default_hdfs_site_conf, $default_ha_hdfs_site_conf, $zoo_hdfs_site_conf, $httpfs_hdfs_site_conf, $nfs_hdfs_site_conf, $overwrite_hdfs_site_conf)
   $mapred_site_conf = merge( $default_mapred_site_conf, $overwrite_mapred_site_conf )
   $yarn_site_conf   = merge( $default_yarn_site_conf, $default_ha_yarn_site_conf, $zoo_yarn_site_conf, $tl_yarn_site_conf, $overwrite_yarn_site_conf)
-
+  $capacity_scheduler = merge( $default_capacity_scheduler, $overwrite_capacity_scheduler )
 
   anchor{ '::hadoop::start': } ->
   class { '::hadoop::install': } ->
@@ -284,3 +302,4 @@ class hadoop (
   anchor{ '::hadoop::end': }
 
 }
+
