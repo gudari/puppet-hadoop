@@ -51,10 +51,6 @@ class hadoop (
   $hdfs_datanode_dirs = $::hadoop::params::hdfs_datanode_dirs,
   $hdfs_journal_dirs  = $::hadoop::params::hdfs_journal_dirs,
 
-  $install_tez = true,
-  $install_tez_ui = false,
-  $overwrite_tez_site_conf = {},
-
 ) inherits hadoop::params {
 
   validate_legacy(Boolean, 'validate_bool', $install_dependencies)
@@ -273,14 +269,6 @@ class hadoop (
     }
   } else {
       $default_ha_yarn_site_conf = {}
-  }
-
-  if $install_tez {
-    $default_tez_site_conf = {
-
-    }
-    $tez_site_conf = merge( $default_tez_site_conf, $overwrite_tez_site_conf )
-    class { '::hadoop::tez::download': }
   }
 
   $core_site_conf   = merge( $default_core_site_conf, $default_ha_core_site_conf, $zoo_core_site_conf, $overwrite_core_site_conf)
