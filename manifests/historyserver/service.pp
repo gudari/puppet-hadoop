@@ -1,21 +1,32 @@
 class hadoop::historyserver::service {
+
   if $hadoop::service_install {
+
     if $::service_provider == 'systemd' {
-      include ::systemd
+
+      exec { "systemctl-daemon-reload-${hadoop::service_historyserver}":
+        command     => 'systemctl daemon-reload',
+        refreshonly => true,
+        path        => '/usr/bin',
+      }
+
       file { "${hadoop::service_historyserver}.service":
         ensure  => file,
         path    => "/etc/systemd/system/${hadoop::service_historyserver}.service",
         mode    => '0644',
         content => template('hadoop/service/unit-hadoop-historyserver.erb'),
       }
+
       file { "/etc/init.d/${hadoop::service_historyserver}":
         ensure => absent,
       }
 
       File["${hadoop::service_historyserver}.service"] ~>
-      Exec['systemctl-daemon-reload'] ->
+      Exec["systemctl-daemon-reload-${hadoop::service_historyserver}"] ->
       Service[$hadoop::service_historyserver]
+
     } else {
+
       file { "${hadoop::service_historyserver}.service":
         ensure  => file,
         path    => "/etc/init.d/${hadoop::service_historyserver}",
@@ -31,6 +42,7 @@ class hadoop::historyserver::service {
       hasstatus  => true,
       hasrestart => true,
     }
+
   } else {
     debug('Skipping service install')
   }

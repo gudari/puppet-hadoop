@@ -1,21 +1,32 @@
 class hadoop::journalnode::service {
+
   if $hadoop::service_install {
+
     if $::service_provider == 'systemd' {
-      include ::systemd
+
+      exec { "systemctl-daemon-reload-${hadoop::service_journalnode}":
+        command     => 'systemctl daemon-reload',
+        refreshonly => true,
+        path        => '/usr/bin',
+      }
+
       file { "${hadoop::service_journalnode}.service":
         ensure  => file,
         path    => "/etc/systemd/system/${hadoop::service_journalnode}.service",
         mode    => '0644',
         content => template('hadoop/service/unit-hadoop-journalnode.erb'),
       }
+
       file { "/etc/init.d/${hadoop::service_journalnode}":
         ensure => absent,
       }
 
       File["${hadoop::service_journalnode}.service"] ~>
-      Exec['systemctl-daemon-reload'] ->
+      Exec["systemctl-daemon-reload-${hadoop::service_journalnode}"] ->
       Service[$hadoop::service_journalnode]
+
     } else {
+
       file { "${hadoop::service_journalnode}.service":
         ensure  => file,
         path    => "/etc/init.d/${hadoop::service_journalnode}",

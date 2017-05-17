@@ -1,21 +1,32 @@
 class hadoop::nodemanager::service {
+
   if $hadoop::service_install {
+
     if $::service_provider == 'systemd' {
-      include ::systemd
+
+      exec { "systemctl-daemon-reload-${hadoop::service_nodemanager}":
+        command     => 'systemctl daemon-reload',
+        refreshonly => true,
+        path        => '/usr/bin',
+      }
+
       file { "${hadoop::service_nodemanager}.service":
         ensure  => file,
         path    => "/etc/systemd/system/${hadoop::service_nodemanager}.service",
         mode    => '0644',
         content => template('hadoop/service/unit-hadoop-nodemanager.erb'),
       }
+
       file { "/etc/init.d/${hadoop::service_nodemanager}":
         ensure => absent,
       }
 
       File["${hadoop::service_nodemanager}.service"] ~>
-      Exec['systemctl-daemon-reload'] ->
+      Exec["systemctl-daemon-reload-${hadoop::service_nodemanager}"] ->
       Service[$hadoop::service_nodemanager]
+
     } else {
+
       file { "${hadoop::service_nodemanager}.service":
         ensure  => file,
         path    => "/etc/init.d/${hadoop::service_nodemanager}",
@@ -31,7 +42,10 @@ class hadoop::nodemanager::service {
       hasstatus  => true,
       hasrestart => true,
     }
+
   } else {
+
     debug('Skipping service install')
+
   }
 }

@@ -1,19 +1,28 @@
 class hadoop::timelineserver::service {
+
   if $hadoop::service_install {
+
     if $::service_provider == 'systemd' {
-      include ::systemd
+
+      exec { "systemctl-daemon-reload-${hadoop::service_timelineserver}":
+        command     => 'systemctl daemon-reload',
+        refreshonly => true,
+        path        => '/usr/bin',
+      }
+
       file { "${hadoop::service_timelineserver}.service":
         ensure  => file,
         path    => "/etc/systemd/system/${hadoop::service_timelineserver}.service",
         mode    => '0644',
         content => template('hadoop/service/unit-hadoop-timelineserver.erb'),
       }
+
       file { "/etc/init.d/${hadoop::service_timelineserver}":
         ensure => absent,
       }
 
       File["${hadoop::service_timelineserver}.service"] ~>
-      Exec['systemctl-daemon-reload'] ->
+      Exec["systemctl-daemon-reload-${hadoop::service_timelineserver}"] ->
       Service[$hadoop::service_timelineserver]
     } else {
       file { "${hadoop::service_timelineserver}.service":

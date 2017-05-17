@@ -1,21 +1,32 @@
 class hadoop::namenode::service {
+
   if $hadoop::service_install {
+
     if $::service_provider == 'systemd' {
-      include ::systemd
+
+      exec { "systemctl-daemon-reload-${hadoop::service_namenode}":
+        command     => 'systemctl daemon-reload',
+        refreshonly => true,
+        path        => '/usr/bin',
+      }
+
       file { "${hadoop::service_namenode}.service":
         ensure  => file,
         path    => "/etc/systemd/system/${hadoop::service_namenode}.service",
         mode    => '0644',
         content => template('hadoop/service/unit-hadoop-namenode.erb'),
       }
+
       file { "/etc/init.d/${hadoop::service_namenode}":
         ensure => absent,
       }
 
       File["${hadoop::service_namenode}.service"] ~>
-      Exec['systemctl-daemon-reload'] ->
+      Exec["systemctl-daemon-reload-${hadoop::service_namenode}"] ->
       Service[$hadoop::service_namenode]
+
     } else {
+
       file { "${hadoop::service_namenode}.service":
         ensure  => file,
         path    => "/etc/init.d/${hadoop::service_namenode}",
@@ -31,7 +42,10 @@ class hadoop::namenode::service {
       hasstatus  => true,
       hasrestart => true,
     }
+
   } else {
+
     debug('Skipping service install')
+
   }
 }

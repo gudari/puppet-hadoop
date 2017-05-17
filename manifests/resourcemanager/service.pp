@@ -1,20 +1,34 @@
 class hadoop::resourcemanager::service {
+
   if $hadoop::service_install {
+
+    exec { "systemctl-daemon-restart-${hadoop::service_resourcemanager}":
+      command => 'systemctl daemon-reload',
+    }
+
     if $::service_provider == 'systemd' {
-      include ::systemd
+
+      exec { "systemctl-daemon-reload-${hadoop::service_resourcemanager}":
+        command     => 'systemctl daemon-reload',
+        refreshonly => true,
+        path        => '/usr/bin',
+      }
+
       file { "${hadoop::service_resourcemanager}.service":
         ensure  => file,
         path    => "/etc/systemd/system/${hadoop::service_resourcemanager}.service",
         mode    => '0644',
         content => template('hadoop/service/unit-hadoop-resourcemanager.erb'),
       }
+
       file { "/etc/init.d/${hadoop::service_resourcemanager}":
         ensure => absent,
       }
 
       File["${hadoop::service_resourcemanager}.service"] ~>
-      Exec['systemctl-daemon-reload'] ->
+      Exec["systemctl-daemon-reload-${hadoop::service_resourcemanager}"] ->
       Service[$hadoop::service_resourcemanager]
+
     } else {
       file { "${hadoop::service_resourcemanager}.service":
         ensure  => file,
