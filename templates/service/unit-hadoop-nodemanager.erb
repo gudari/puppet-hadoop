@@ -4,7 +4,7 @@ Documentation=http://hadoop.apache.org/
 
 [Service]
 Type=simple
-PermissionStartOnly=true
+PermissionsStartOnly=true
 User=<%= scope.lookupvar('hadoop::hdfs_user') %>
 Group=<%= scope.lookupvar('hadoop::hadoop_group') %>
 SyslogIdentifier=<%= scope.lookupvar('hadoop::service_nodemanager') %>
