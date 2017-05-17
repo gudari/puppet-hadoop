@@ -2,10 +2,6 @@ class hadoop::resourcemanager::service {
 
   if $hadoop::service_install {
 
-    exec { "systemctl-daemon-restart-${hadoop::service_resourcemanager}":
-      command => 'systemctl daemon-reload',
-    }
-
     if $::service_provider == 'systemd' {
 
       exec { "systemctl-daemon-reload-${hadoop::service_resourcemanager}":
