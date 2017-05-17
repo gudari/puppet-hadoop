@@ -10,8 +10,6 @@ class hadoop::params {
   $package_name          = undef
   $package_ensure        = 'present'
 
-  $install_java          = true
-  $java_version          = '8'
   $install_dependencies  = true
   $packages_dependencies = [ 'openssh', 'rsync' ]
 
